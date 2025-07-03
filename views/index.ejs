@@ -1,0 +1,68 @@
+<%- include('layouts/header'); %>
+
+<div class="container mt-5">
+    <div class="px-4 py-5 my-5 text-center">
+        <h1 class="display-5 fw-bold"><%= title %></h1>
+        <div class="col-lg-6 mx-auto">
+            <p class="lead mb-4">Vista general del inventario de equipos registrados en GLPI.</p>
+        </div>
+    </div>
+
+    <!-- Cards con los conteos totales -->
+    <div class="row text-center mb-5">
+        <% tipos.forEach(tipo => { %>
+            <div class="col-md-4">
+                <div class="card text-bg-primary mb-3">
+                    <div class="card-header"><%= tipo.replace(/([A-Z])/g, ' $1').trim() %>s</div>
+                    <div class="card-body">
+                        <h2 class="card-title"><%= counts[tipo] || 0 %></h2>
+                        <p class="card-text">Total de equipos</p>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+
+    <!-- Tablas de inventario por tipo -->
+    <% tipos.forEach(tipo => { %>
+        <div class="card mb-5">
+            <div class="card-header">
+                <h3>Inventario de <%= tipo.replace(/([A-Z])/g, ' $1').trim() %>s</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Número de Inventario</th>
+                                <th>Fabricante</th>
+                                <th>Modelo</th>
+                                <th>Serial</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (inventario[tipo] && inventario[tipo].length > 0) { %>
+                                <% inventario[tipo].forEach((item, index) => { %>
+                                    <tr>
+                                        <td><%= index + 1 %></td>
+                                        <td><%= item.numero_inventario %></td>
+                                        <td><%= item.fabricante || 'N/A' %></td>
+                                        <td><%= item.modelo || 'N/A' %></td>
+                                        <td><%= item.serial || 'N/A' %></td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="text-center">No hay equipos de este tipo.</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+</div>
+
+<%- include('layouts/footer'); %>
