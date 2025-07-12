@@ -1,100 +1,317 @@
 <%- include('../layouts/header'); %>
 
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-header">
-            <h1><%= title %></h1>
-        </div>
-        <div class="card-body">
-            <form action="/admin/acta/create" method="POST">
-                
-                <!-- Datos del Usuario Receptor -->
-                <fieldset class="mb-4">
-                    <legend>1. Datos del Usuario Receptor</legend>
-                    <div class="mb-3">
-                        <label for="glpi_users_id" class="form-label">Usuario (Receptor)</label>
-                        <select class="form-select" id="glpi_users_id" name="glpi_users_id" required>
-                            <option value="" disabled selected>Seleccione un usuario...</option>
-                            <% users.forEach(user => { %>
-                                <option value="<%= user.id %>"><%= user.fullname %></option>
-                            <% }); %>
-                        </select>
-                    </div>
-                </fieldset>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h1>
+                    <%= title %>
+                </h1>
+            </div>
+            <div class="card-body">
+                <form action="/admin/acta/create" method="POST">
 
-                <!-- Equipos Asignados -->
-                <fieldset class="mb-4">
-                    <legend>2. Equipos Asignados</legend>
+                    <fieldset class="mb-4">
+                        <legend>1. Equipos Asignados</legend>
+                        <div class="row">
+                            <div class="col-md-5">
+                                <label for="tipoEquipo" class="form-label">Tipo de Equipo</label>
+                                <select id="tipoEquipo" class="form-select">
+                                    <option value="" disabled selected>Seleccione un tipo...</option>
+                                    <% tiposDeEquipo.forEach(tipo=> { %>
+                                        <option value="<%= tipo %>">
+                                            <%= tipo.replace(/([A-Z])/g, ' $1' ).trim() %>
+                                        </option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label for="listaEquipos" class="form-label">Equipos Disponibles</label>
+                                <select id="listaEquipos" class="form-select" disabled>
+                                    <option>Seleccione un tipo primero</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" id="btnAgregarEquipo" class="btn btn-success w-100"
+                                    disabled>Agregar</button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h5>Equipos en el Acta</h5>
+                            <ul id="equiposAgregados" class="list-group">
+                                <li class="list-group-item text-muted">No se han agregado equipos.</li>
+                            </ul>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4">
+                        <legend>2. Observaciones</legend>
+                        <div class="mb-3">
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                        </div>
+                    </fieldset>
+<hr>
                     <div class="row">
-                        <div class="col-md-5">
-                            <label for="tipoEquipo" class="form-label">Tipo de Equipo</label>
-                            <select id="tipoEquipo" class="form-select">
-                                <option value="" disabled selected>Seleccione un tipo...</option>
-                                <% tiposDeEquipo.forEach(tipo => { %>
-                                    <option value="<%= tipo %>"><%= tipo.replace(/([A-Z])/g, ' $1').trim() %></option>
-                                <% }); %>
-                            </select>
+                        <div class="col-md-6">
+                            <fieldset class="mb-4">
+                                <legend>3. Datos de Entrega</legend>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="entregado_por_nombre" class="form-label">Entregado por (Nombre y
+                                            Apellido)</label>
+                                        <input type="text" class="form-control" id="entregado_por_nombre"
+                                            name="entregado_por_nombre" required>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="entregado_por_cargo" class="form-label">Cargo</label>
+                                        <input type="text" class="form-control" id="entregado_por_cargo"
+                                            name="entregado_por_cargo" required>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="entregado_por_cedula" class="form-label">Cédula</label>
+                                        <input type="text" class="form-control" id="entregado_por_cedula"
+                                            name="entregado_por_cedula" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Firma de quien entrega</label>
+                                        <div id="signature-pad-container"
+                                            style="border: 1px solid #ced4da; border-radius: .25rem; position: relative; height: 200px; touch-action: none; cursor: crosshair;">
+                                            <canvas id="signature-pad"
+                                                style="position: absolute; left: 0; top: 0; width:100%; height:100%;"></canvas>
+                                        </div>
+                                        <button type="button" id="clear-signature"
+                                            class="btn btn-sm btn-outline-secondary mt-2">Limpiar Firma</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="entregado_por_firma" id="entregado_por_firma">
+                            </fieldset>
                         </div>
-                        <div class="col-md-5">
-                            <label for="listaEquipos" class="form-label">Equipos Disponibles</label>
-                            <select id="listaEquipos" class="form-select" disabled>
-                                <option>Seleccione un tipo primero</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" id="btnAgregarEquipo" class="btn btn-success w-100" disabled>Agregar</button>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <h5>Equipos en el Acta</h5>
-                        <ul id="equiposAgregados" class="list-group">
-                            <li class="list-group-item text-muted">No se han agregado equipos.</li>
-                        </ul>
-                    </div>
-                </fieldset>
 
-                <!-- Observaciones -->
-                <fieldset class="mb-4">
-                    <legend>3. Observaciones</legend>
-                    <div class="mb-3">
-                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
-                    </div>
-                </fieldset>
-
-                <!-- Datos de Entrega -->
-                <fieldset class="mb-4">
-                    <legend>4. Datos de Entrega</legend>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="entregado_por_nombre" class="form-label">Entregado por (Nombre y Apellido)</label>
-                            <input type="text" class="form-control" id="entregado_por_nombre" name="entregado_por_nombre" required>
+                        <div class="col-md-6">
+                            <fieldset class="mb-4">
+                                <legend>4. Datos del Usuario Receptor</legend>
+                                <div class="mb-3">
+                                    <label for="glpi_users_id" class="form-label">Usuario (Receptor)</label>
+                                    <select class="form-select" id="glpi_users_id" name="glpi_users_id" required>
+                                        <option value="" disabled selected>Seleccione un usuario...</option>
+                                        <% users.forEach(user=> { %>
+                                            <option value="<%= user.id %>">
+                                                <%= user.fullname %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Firma de quien recibe</label>
+                                        <div id="signature-pad-recibe-container"
+                                            style="border: 1px solid #ced4da; border-radius: .25rem; position: relative; height: 200px; touch-action: none; cursor: crosshair;">
+                                            <canvas id="signature-pad-recibe"
+                                                style="position: absolute; left: 0; top: 0; width:100%; height:100%;"></canvas>
+                                        </div>
+                                        <button type="button" id="clear-signature-recibe"
+                                            class="btn btn-sm btn-outline-secondary mt-2">Limpiar Firma</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="recibido_por_firma" id="recibido_por_firma">
+                            </fieldset>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="entregado_por_cargo" class="form-label">Cargo</label>
-                            <input type="text" class="form-control" id="entregado_por_cargo" name="entregado_por_cargo" required>
+                    </div> <fieldset class="mb-4">
+                        <legend>5. Responsabilidades del Usuario</legend>
+                        <div class="form-control" style="height: 150px; overflow-y: auto; background-color: #e9ecef;">
+                            <small><%- responsabilidades.replace(/\n/g, '<br>' ) %></small>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="entregado_por_cedula" class="form-label">Cédula</label>
-                            <input type="text" class="form-control" id="entregado_por_cedula" name="entregado_por_cedula" required>
-                        </div>
-                    </div>
-                    <!-- Aquí iría el componente para la firma digital -->
-                </fieldset>
+                    </fieldset>
 
-                <!-- Responsabilidades -->
-                <fieldset class="mb-4">
-                    <legend>5. Responsabilidades del Usuario</legend>
-                    <div class="form-control" style="height: 150px; overflow-y: auto; background-color: #e9ecef;">
-                        <small><%- responsabilidades.replace(/\n/g, '<br>') %></small>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Generar Acta</button>
                     </div>
-                </fieldset>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary btn-lg">Generar Acta</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            /**
+             * Inicializa un componente SignaturePad.
+             * @param {string} canvasId 
+             * @param {string} containerId 
+             * @param {string} clearButtonId 
+             * @returns {SignaturePad}
+             */
+            function setupSignaturePad(canvasId, containerId, clearButtonId) {
+                const canvas = document.getElementById(canvasId);
+                const signaturePad = new SignaturePad(canvas, {
+                    backgroundColor: 'rgb(255, 255, 255)'
+                });
+
+                function resizeCanvas() {
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    const container = document.getElementById(containerId);
+                    canvas.width = container.offsetWidth * ratio;
+                    canvas.height = container.offsetHeight * ratio;
+                    canvas.getContext("2d").scale(ratio, ratio);
+                    signaturePad.clear();
+                }
+
+                window.addEventListener("resize", resizeCanvas);
+                resizeCanvas();
+
+                document.getElementById(clearButtonId).addEventListener('click', function () {
+                    signaturePad.clear();
+                });
+
+                return signaturePad;
+            }
+
+            // Inicializar ambos pads de firma
+            const signaturePadEntrega = setupSignaturePad('signature-pad', 'signature-pad-container', 'clear-signature');
+            const signaturePadRecibe = setupSignaturePad('signature-pad-recibe', 'signature-pad-recibe-container', 'clear-signature-recibe');
+
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function (event) {
+                const errors = [];
+                // Verificar si ambos pads de firma están vacíos
+                if (signaturePadRecibe.isEmpty()) {
+                    errors.push("la firma de quien recibe");
+                }
+                if (signaturePadEntrega.isEmpty()) {
+                    errors.push("la firma de quien entrega");
+                }
+
+                if (errors.length > 0) {
+                    const message = "Por favor, proporcione " + errors.join(' y ') + ".";
+                    alert(message);
+                    event.preventDefault(); // Evita el envío del formulario si hay errores
+                } else {
+                    // Si no hay errores, capturar los datos de la firma y asignarlos a los campos ocultos
+                    const recibeData = signaturePadRecibe.toDataURL('image/png');
+                    document.getElementById('recibido_por_firma').value = recibeData;
+
+                    const entregaData = signaturePadEntrega.toDataURL('image/png');
+                    document.getElementById('entregado_por_firma').value = entregaData;
+                }
+            });
+
+            // Lógica para agregar equipos a la lista
+            const tipoEquipoSelect = document.getElementById('tipoEquipo');
+            const listaEquiposSelect = document.getElementById('listaEquipos');
+            const btnAgregarEquipo = document.getElementById('btnAgregarEquipo');
+            const equiposAgregadosList = document.getElementById('equiposAgregados');
+
+            let equiposSeleccionados = {}; // Objeto para evitar duplicados y almacenar el texto completo
+
+            tipoEquipoSelect.addEventListener('change', async function() {
+                const tipo = this.value;
+                if (tipo) {
+                    listaEquiposSelect.innerHTML = '<option>Cargando equipos...</option>';
+                    listaEquiposSelect.disabled = true;
+                    btnAgregarEquipo.disabled = true;
+
+                    try {
+                        // Asegúrate de que esta URL sea correcta según tus rutas de Express
+                        // La ruta aquí usa :tipo, lo que es consistente con la corrección en routes/admin.js
+                        const response = await fetch(`/api/equipos/${tipo}`); 
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const equipos = await response.json();
+                        
+                        listaEquiposSelect.innerHTML = ''; // Limpiar opciones anteriores
+                        if (equipos.length > 0) {
+                            equipos.forEach(equipo => {
+                                const option = document.createElement('option');
+                                // El valor combina itemtype|items_id para ser fácilmente parseado en el backend
+                                option.value = `${tipo}|${equipo.id}`; 
+                                
+                                // Mostrar prioritariamente el numero_inventario.
+                                // Si no existe, usar el serial, y si no, un placeholder.
+                                const displayIdentifier = equipo.numero_inventario || equipo.serial || 'N/A';
+                                const displayFabricante = equipo.fabricante || 'N/A';
+                                const displayModelo = equipo.modelo || 'N/A';
+                                const displayUbicacion = equipo.ubicacion ? `(${equipo.ubicacion})` : '';
+
+                                // Para el tipo 'Lines', quizás quieras un formato más específico
+                                if (tipo === 'Lines') {
+                                    option.textContent = `Línea: ${displayIdentifier} - Número: ${equipo.serial || 'N/A'} - Grupo: ${displayFabricante}`;
+                                } else {
+                                    option.textContent = `${displayIdentifier} - ${displayFabricante} ${displayModelo} ${displayUbicacion}`;
+                                }
+
+                                listaEquiposSelect.appendChild(option);
+                            });
+                            listaEquiposSelect.disabled = false;
+                            btnAgregarEquipo.disabled = false;
+                        } else {
+                            listaEquiposSelect.innerHTML = '<option>No hay equipos disponibles para este tipo.</option>';
+                        }
+                    } catch (error) {
+                        console.error('Error al cargar equipos:', error);
+                        listaEquiposSelect.innerHTML = '<option>Error al cargar equipos.</option>';
+                    }
+                } else {
+                    listaEquiposSelect.innerHTML = '<option>Seleccione un tipo primero</option>';
+                    listaEquiposSelect.disabled = true;
+                    btnAgregarEquipo.disabled = true;
+                }
+            });
+
+            btnAgregarEquipo.addEventListener('click', function() {
+                const selectedOption = listaEquiposSelect.options[listaEquiposSelect.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    const equipoValue = selectedOption.value; 
+                    const equipoText = selectedOption.textContent;
+
+                    if (!equiposSeleccionados[equipoValue]) { // Evita duplicados
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                        li.innerHTML = `
+                            ${equipoText}
+                            <button type="button" class="btn btn-danger btn-sm remover-equipo" data-value="${equipoValue}">X</button>
+                            <input type="hidden" name="equipos[]" value="${equipoValue}">
+                        `;
+                        equiposAgregadosList.appendChild(li);
+
+                        equiposSeleccionados[equipoValue] = true; // Marca como agregado
+
+                        // Eliminar el mensaje "No se han agregado equipos." si existe
+                        const noEquiposMessage = equiposAgregadosList.querySelector('.text-muted');
+                        if (noEquiposMessage) {
+                            noEquiposMessage.remove();
+                        }
+
+                        // Agregar listener para el botón de remover
+                   /*     li.querySelector('.remover-equipo').addEventListener('click', function() {
+                            li.remove();
+                            delete equiposSeleccionados[this.dataset.value]; // Elimina del registro
+                            if (Object.keys(equiposSeleccionados).length === 0) {
+                                const placeholder = document.createElement('li');
+                                placeholder.className = 'list-group-item text-muted';
+                                placeholder.textContent = 'No se han agregado equipos.';
+                                equiposAgregadosList.appendChild(placeholder);
+                            }
+                        });
+*/
+                  
+                        selectedOption.remove(); 
+                        if (listaEquiposSelect.options.length === 0) {
+                            listaEquiposSelect.innerHTML = '<option>No hay más equipos disponibles.</option>';
+                            listaEquiposSelect.disabled = true;
+                            btnAgregarEquipo.disabled = true;
+                        }
+                   
+                        
+                    } else {
+                        alert('Este equipo ya ha sido agregado.');
+                    }
+                } else {
+                    alert('Por favor, seleccione un equipo para agregar.');
+                }
+            });
+        });
+    </script>
 
 <%- include('../layouts/footer'); %>

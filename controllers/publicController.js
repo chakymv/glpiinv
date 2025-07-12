@@ -1,16 +1,14 @@
 const actaModel = require('../models/actaModel');
 
-const tiposDeEquipo = ['Computer', 'Phone', 'NetworkEquipment'];
+const tiposDeEquipo = ['Computer', 'Phone', 'NetworkEquipment', 'Monitor', 'Printer', 'Lines', ];
 
-/**
- * Muestra la página principal del inventario.
- */
+
 const showInventory = async (req, res) => {
     try {
-        // Obtener los conteos para las cards
+
         const counts = await actaModel.getEquipoCounts();
 
-        // Obtener los detalles de cada tipo de equipo para las tablas
+
         const inventario = {};
         for (const tipo of tiposDeEquipo) {
             inventario[tipo] = await actaModel.getEquiposPorTipo(tipo);
@@ -26,6 +24,8 @@ const showInventory = async (req, res) => {
         res.status(500).send('Error al cargar el inventario: ' + error.message);
     }
 };
+
+
 
 module.exports = {
     showInventory

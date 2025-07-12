@@ -1,66 +1,95 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const tipoEquipoSelect = document.getElementById('tipoEquipo');
-    const listaEquiposSelect = document.getElementById('listaEquipos');
-    const btnAgregarEquipo = document.getElementById('btnAgregarEquipo');
-    const equiposAgregadosList = document.getElementById('equiposAgregados');
-
-    if (tipoEquipoSelect) {
-        tipoEquipoSelect.addEventListener('change', async function() {
-            const tipo = this.value;
-            if (!tipo) return;
-
-            listaEquiposSelect.disabled = true;
-            listaEquiposSelect.innerHTML = '<option>Cargando...</option>';
-            btnAgregarEquipo.disabled = true;
-
-            try {
-                const response = await fetch(`/admin/api/equipos/${tipo}`);
-                if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                const equipos = await response.json();
-
-                listaEquiposSelect.innerHTML = '<option value="" disabled selected>Seleccione un equipo...</option>';
-                equipos.forEach(equipo => {
-                    const optionText = `${equipo.numero_inventario} - ${equipo.fabricante || ''} ${equipo.modelo || ''} (S/N: ${equipo.serial || 'N/A'})`;
-                    const option = new Option(optionText, `${tipo}|${equipo.id}`);
-                    listaEquiposSelect.add(option);
-                });
-
-                listaEquiposSelect.disabled = false;
-            } catch (error) {
-                console.error('Error al cargar equipos:', error);
-                listaEquiposSelect.innerHTML = '<option>Error al cargar</option>';
+document.addEventListener('DOMContentLoaded', () => {
+    // Lógica para el selector de tipo de activo
+    const tipoActivoSelect = document.getElementById('tipoActivoSelect');
+    if (tipoActivoSelect) {
+        tipoActivoSelect.addEventListener('change', (event) => {
+            const selectedType = event.target.value;
+            if (selectedType) {
+                window.location.href = `/inventory/${selectedType}`;
             }
         });
     }
 
-    if (listaEquiposSelect) {
-        listaEquiposSelect.addEventListener('change', function() {
-            btnAgregarEquipo.disabled = !this.value;
+    // Lógica para la barra de búsqueda y filtros
+    const searchBar = document.getElementById('searchBar');
+    const estadoSelect = document.getElementById('estadoSelect');
+    const inventoryTable = document.getElementById('inventoryTable');
+
+    function filterTable() {
+        const searchText = searchBar ? searchBar.value.toLowerCase() : '';
+        const estadoFilter = estadoSelect ? estadoSelect.value.toLowerCase() : '';
+
+        if (inventoryTable) {
+            const rows = inventoryTable.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const numeroInventario = row.cells[1].textContent.toLowerCase();
+                const fabricante = row.cells[2].textContent.toLowerCase();
+                const modelo = row.cells[3].textContent.toLowerCase();
+                const serial = row.cells[4].textContent.toLowerCase();
+                const estado = row.cells[5].textContent.toLowerCase();
+                const usuarioAsignado = row.cells[6].textContent.toLowerCase();
+
+                const matchesSearch = searchText === '' || 
+                                      numeroInventario.includes(searchText) ||
+                                      fabricante.includes(searchText) ||
+                                      modelo.includes(searchText) ||
+                                      serial.includes(searchText) ||
+                                      usuarioAsignado.includes(searchText);
+
+                const matchesEstado = estadoFilter === '' || estado === estadoFilter;
+
+                if (matchesSearch && matchesEstado) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    if (searchBar) {
+        searchBar.addEventListener('keyup', filterTable);
+    }
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', filterTable);
+    }
+
+    // Lógica para el botón de exportar (si tienes implementada la exportación en el backend)
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            const currentType = window.location.pathname.split('/').pop();
+            // Asegúrate de que esta ruta coincida con tu endpoint de exportación en el backend
+            window.location.href = `/export/${currentType}`; 
         });
     }
 
-    if (btnAgregarEquipo) {
-        btnAgregarEquipo.addEventListener('click', function() {
-            const selectedOption = listaEquiposSelect.options[listaEquiposSelect.selectedIndex];
-            if (!selectedOption || !selectedOption.value) return;
+    // Lógica para agregar equipo a un acta (si tienes un modal para esto)
+    // Asumo que tienes un modal para crear actas y que este botón lo abre.
+    // Aquí solo se prepara la data para ser usada por otro modal o función.
+    document.querySelectorAll('.select-item-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const itemId = event.currentTarget.dataset.id;
+            const itemType = event.currentTarget.dataset.type;
+            const inventoryNumber = event.currentTarget.dataset.inventory;
+            const serial = event.currentTarget.dataset.serial;
+            const fabricante = event.currentTarget.dataset.fabricante;
+            const modelo = event.currentTarget.dataset.modelo;
 
-            const valor = selectedOption.value;
-            const texto = selectedOption.text;
-
-            // Evitar duplicados
-            if (document.querySelector(`input[value="${valor}"]`)) {
-                alert('Este equipo ya ha sido agregado.');
-                return;
-            }
-
-            if (equiposAgregadosList.querySelector('.text-muted')) {
-                equiposAgregadosList.innerHTML = '';
-            }
-
-            const li = document.createElement('li');
-            li.className = 'list-group-item';
-            li.innerHTML = `${texto} <input type="hidden" name="equipos[]" value="${valor}">`;
-            equiposAgregadosList.appendChild(li);
+            // Aquí puedes llamar a una función para abrir el modal de creación de actas
+            // y pasarle esta información. Por ejemplo:
+            // openActaCreationModal({ id: itemId, type: itemType, inventory: inventoryNumber, serial, fabricante, modelo });
+            
+            // Para propósitos de demostración, solo imprimimos en consola
+            console.log('Item seleccionado para acta:', {
+                id: itemId,
+                type: itemType,
+                inventory: inventoryNumber,
+                serial: serial,
+                fabricante: fabricante,
+                modelo: modelo
+            });
+            alert(`Equipo ${inventoryNumber} (${itemType}) listo para ser añadido a un acta.`);
         });
-    }
+    });
 });

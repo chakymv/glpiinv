@@ -1,37 +1,77 @@
 <%- include('layouts/header'); %>
 
 <div class="container mt-5">
-    <div class="px-4 py-5 my-5 text-center">
-        <h1 class="display-5 fw-bold"><%= title %></h1>
+    <div class="my-5 text-center">
+        <h1 class="display-5 fw-bold titulo"><%= title %></h1>
         <div class="col-lg-6 mx-auto">
-            <p class="lead mb-4">Vista general del inventario de equipos registrados en GLPI.</p>
+            <p class="lead mb-4">Selecciona un tipo de activo para ver y gestionar el inventario.</p>
         </div>
     </div>
 
-    <!-- Cards con los conteos totales -->
-    <div class="row text-center mb-5">
-        <% tipos.forEach(tipo => { %>
-            <div class="col-md-4">
-                <div class="card text-bg-primary mb-3">
-                    <div class="card-header"><%= tipo.replace(/([A-Z])/g, ' $1').trim() %>s</div>
-                    <div class="card-body">
-                        <h2 class="card-title"><%= counts[tipo] || 0 %></h2>
-                        <p class="card-text">Total de equipos</p>
+    <div class="row text-center mb-5 justify-content-center">
+        <% if (counts) { %>
+            <% tipos.forEach(tipo => { %>
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-header"><%= tipo.replace(/([A-Z])/g, ' $1').trim() %>s</div>
+                        <div class="card-body">
+                            <h2 class="card-title titulo-degradado"><%= counts[tipo] || 0 %></h2>
+                        </div>
                     </div>
                 </div>
-            </div>
-        <% }); %>
+            <% }); %>
+        <% } %>
     </div>
 
-    <!-- Tablas de inventario por tipo -->
+    <div class="row mb-4 align-items-end">
+        <div class="col-md-3">
+            <label for="dropdownMenuButton1" class="form-label">Tipo de Activo</label>
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle w-100" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                    Seleccionar Tipo de Activo
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                    <% tipos.forEach(tipo => { %>
+                        <li><a class="dropdown-item" href="#" data-tipo="<%= tipo %>"><%= tipo.replace(/([A-Z])/g, ' $1').trim() %>s</a></li>
+                    <% }); %>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <label for="searchInput" class="form-label">Búsqueda General</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar...">
+        </div>
+        <div class="col-md-2">
+            <label for="filterEstado" class="form-label">Estado</label>
+            <select id="filterEstado" class="form-select">
+                <option value="">Todos</option>
+                </select>
+        </div>
+        <div class="col-md-2">
+            <label for="filterMarca" class="form-label">Marca</label>
+            <select id="filterMarca" class="form-select">
+                <option value="">Todas</option>
+                </select>
+        </div>
+        <div class="col-md-2">
+            <label for="filterModelo" class="form-label">Modelo</label>
+            <select id="filterModelo" class="form-select">
+                <option value="">Todos</option>
+                </select>
+        </div>
+    </div>
+
     <% tipos.forEach(tipo => { %>
-        <div class="card mb-5">
-            <div class="card-header">
+        <div class="card mb-5 inventory-table" id="table-<%= tipo %>" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h3>Inventario de <%= tipo.replace(/([A-Z])/g, ' $1').trim() %>s</h3>
+                <button class="btn btn-exportar" data-table-id="data-table-<%= tipo %>" data-filename="Inventario_<%= tipo %>.xlsx">
+                    <i class="fa-solid fa-file-excel"></i>
+                </button>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover" id="data-table-<%= tipo %>">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -39,22 +79,53 @@
                                 <th>Fabricante</th>
                                 <th>Modelo</th>
                                 <th>Serial</th>
+                                <th>Estado</th>
+                                <th>Usuario Asignado</th>
+                                <th class="no-export">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <% if (inventario[tipo] && inventario[tipo].length > 0) { %>
                                 <% inventario[tipo].forEach((item, index) => { %>
-                                    <tr>
+                                    <tr class="inventory-row"
+                                        data-usuario="<%= item.usuario_asignado || 'No asignado' %>"
+                                        data-ubicacion="<%= item.ubicacion || 'N/A' %>"
+                                        data-tecnico="<%= item.tecnico_a_cargo || 'N/A' %>"
+                                        data-estado="<%= item.estado || 'N/A' %>"
+                                        data-fabricante="<%= item.fabricante || 'N/A' %>"
+                                        data-modelo="<%= item.modelo || 'N/A' %>"
+                                        data-serial="<%= item.serial || 'N/A' %>"
+                                        data-numero-inventario="<%= item.numero_inventario || 'N/A' %>"
+                                        data-especificaciones='<%- JSON.stringify(item.especificaciones || {}).replace(/'/g, "&apos;") %>'>
                                         <td><%= index + 1 %></td>
-                                        <td><%= item.numero_inventario %></td>
+                                        <td><%= item.numero_inventario || 'N/A' %></td>
                                         <td><%= item.fabricante || 'N/A' %></td>
                                         <td><%= item.modelo || 'N/A' %></td>
                                         <td><%= item.serial || 'N/A' %></td>
+                                        <td>
+                                            <%
+                                                let badgeClass = 'bg-secondary'; // Color por defecto
+                                                const estado = (item.estado || '').toLowerCase();
+                                                if (estado.includes('en uso') || estado.includes('activo')) {
+                                                    badgeClass = 'bg-success';
+                                                } else if (estado.includes('stock') || estado.includes('disponible')) {
+                                                    badgeClass = 'bg-info text-dark';
+                                                } else if (estado.includes('averiado') || estado.includes('reparación') || estado.includes('baja')) {
+                                                    badgeClass = 'bg-danger';
+                                                }
+                                            %>
+                                            <span class="badge <%= badgeClass %>"><%= item.estado || 'N/A' %></span>
+                                        </td>
+                                        <td><%= item.usuario_asignado || 'N/A' %></td>
+                                        <td class="no-export">
+                                          
+                                            <button class="btn btn-primary btn-sm view-user-info-btn" title="Ver Información de Usuario"><i class="fa-solid fa-user"></i></button>
+                                        </td>
                                     </tr>
                                 <% }); %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="5" class="text-center">No hay equipos de este tipo.</td>
+                                    <td colspan="8" class="text-center">No hay equipos de este tipo.</td>
                                 </tr>
                             <% } %>
                         </tbody>
@@ -64,5 +135,315 @@
         </div>
     <% }); %>
 </div>
+
+<div class="modal fade" id="userInfoModal" tabindex="-1" aria-labelledby="userInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userInfoModalLabel">Información de Asignación del Equipo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="foto text-center mb-3">
+                    <img id="modal-foto" src="/images/user-placeholder.png" alt="Foto del Usuario" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                </div>
+                <p><strong>Número de Inventario:</strong> <span id="modal-user-num-inventario"></span></p>
+                <p><strong>Serial:</strong> <span id="modal-user-serial"></span></p>
+                <p><strong>Fabricante:</strong> <span id="modal-user-fabricante"></span></p>
+                <p><strong>Modelo:</strong> <span id="modal-user-modelo"></span></p>
+                <p><strong>Estado:</strong> <span id="modal-estado"></span></p>
+                <p><strong>Usuario Asignado:</strong> <span id="modal-usuario"></span></p>
+                <p><strong>Ubicación:</strong> <span id="modal-ubicacion"></span></p>
+                <p><strong>Técnico a Cargo:</strong> <span id="modal-tecnico"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="specsModal" tabindex="-1" aria-labelledby="specsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="specsModalLabel">Especificaciones del Equipo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modal-specs-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdownItems = document.querySelectorAll('.dropdown-item');
+        const inventoryTables = document.querySelectorAll('.inventory-table');
+        const dropdownButton = document.getElementById('dropdownMenuButton1');
+        const searchInput = document.getElementById('searchInput');
+        const filterEstado = document.getElementById('filterEstado');
+        const filterMarca = document.getElementById('filterMarca');
+        const filterModelo = document.getElementById('filterModelo');
+        const exportButtons = document.querySelectorAll('.btn-exportar');
+
+        let currentActiveTable = null; // Para mantener un registro de la tabla activa
+
+        // Función para aplicar filtros a la tabla visible
+        function applyFilters() {
+            if (!currentActiveTable) return;
+
+            const rows = currentActiveTable.querySelectorAll('tbody tr.inventory-row');
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const estadoFilter = filterEstado.value.toLowerCase();
+            const marcaFilter = filterMarca.value.toLowerCase();
+            const modeloFilter = filterModelo.value.toLowerCase();
+
+            rows.forEach(row => {
+                const numInventario = (row.dataset.numeroInventario || '').toLowerCase();
+                const fabricante = (row.dataset.fabricante || '').toLowerCase();
+                const modelo = (row.dataset.modelo || '').toLowerCase();
+                const serial = (row.dataset.serial || '').toLowerCase();
+                const estado = (row.dataset.estado || '').toLowerCase();
+                const usuario = (row.dataset.usuario || '').toLowerCase();
+
+                const matchesSearch = (
+                    numInventario.includes(searchTerm) ||
+                    fabricante.includes(searchTerm) ||
+                    modelo.includes(searchTerm) ||
+                    serial.includes(searchTerm) ||
+                    estado.includes(searchTerm) ||
+                    usuario.includes(searchTerm)
+                );
+
+                const matchesEstado = (estadoFilter === '' || estado.includes(estadoFilter));
+                const matchesMarca = (marcaFilter === '' || fabricante.includes(marcaFilter));
+                const matchesModelo = (modeloFilter === '' || modelo.includes(modeloFilter));
+
+                if (matchesSearch && matchesEstado && matchesMarca && matchesModelo) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Event Listeners para los filtros
+        searchInput.addEventListener('input', applyFilters);
+        filterEstado.addEventListener('change', applyFilters);
+        filterMarca.addEventListener('change', applyFilters);
+        filterModelo.addEventListener('change', applyFilters);
+
+        // Llenar dinámicamente los dropdowns de filtros (estados, marcas, modelos)
+        function populateFilters(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            const estados = new Set();
+            const marcas = new Set();
+            const modelos = new Set();
+
+            // Limpiar opciones previas
+            filterEstado.innerHTML = '<option value="">Todos</option>';
+            filterMarca.innerHTML = '<option value="">Todas</option>';
+            filterModelo.innerHTML = '<option value="">Todos</option>';
+
+            table.querySelectorAll('tbody tr.inventory-row').forEach(row => {
+                const estado = row.dataset.estado || '';
+                const marca = row.dataset.fabricante || '';
+                const modelo = row.dataset.modelo || '';
+
+                if (estado && estado !== 'N/A') estados.add(estado);
+                if (marca && marca !== 'N/A') marcas.add(marca);
+                if (modelo && modelo !== 'N/A') modelos.add(modelo);
+            });
+
+            Array.from(estados).sort().forEach(estado => {
+                filterEstado.add(new Option(estado, estado));
+            });
+            Array.from(marcas).sort().forEach(marca => {
+                filterMarca.add(new Option(marca, marca));
+            });
+            Array.from(modelos).sort().forEach(modelo => {
+                filterModelo.add(new Option(modelo, modelo));
+            });
+
+            // Re-aplicar filtros después de poblar si ya había un valor seleccionado
+            applyFilters();
+        }
+
+
+        // Manejar la selección en el dropdown de Tipo de Activo
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevenir el comportamiento predeterminado del enlace
+                const tipo = this.dataset.tipo;
+                const displayTipo = this.textContent;
+
+                // Actualizar el texto del botón del dropdown
+                dropdownButton.textContent = displayTipo;
+
+                // Ocultar todas las tablas y resetear filtros
+                inventoryTables.forEach(table => {
+                    table.style.display = 'none';
+                });
+                searchInput.value = '';
+                filterEstado.value = '';
+                filterMarca.value = '';
+                filterModelo.value = '';
+
+                // Mostrar la tabla correspondiente al tipo seleccionado
+                const selectedTable = document.getElementById(`table-${tipo}`);
+                if (selectedTable) {
+                    selectedTable.style.display = 'block';
+                    currentActiveTable = selectedTable; // Actualizar la tabla activa
+                    populateFilters(`data-table-${tipo}`); // Llenar filtros para la tabla activa
+                    applyFilters(); // Aplicar filtros iniciales
+                }
+            });
+        });
+
+        // --- MODAL LOGIC (USING EVENT DELEGATION FOR ROBUSTNESS) ---
+        const userInfoModal = new bootstrap.Modal(document.getElementById('userInfoModal'));
+        
+
+        // Attach a single event listener to a common ancestor (like document.body)
+        document.body.addEventListener('click', function(e) {
+            const viewSpecsBtn = e.target.closest('.view-specs-btn');
+            const viewUserInfoBtn = e.target.closest('.view-user-info-btn');
+            const inventoryRow = e.target.closest('.inventory-row'); // Get the closest parent row
+
+            // If the click wasn't on one of our buttons or inside an inventory row, do nothing
+            if (!inventoryRow) {
+                return;
+            }
+
+            if (viewSpecsBtn) {
+                e.stopPropagation(); // Stop propagation to prevent row click from also triggering user info if both buttons are present
+                
+                const specsData = inventoryRow.dataset.especificaciones;
+                const modalBody = document.getElementById('modal-specs-body');
+                modalBody.innerHTML = ''; // Clear previous content
+
+                if (!specsData) {
+                    modalBody.innerHTML = '<p class="text-muted">No hay especificaciones disponibles para este equipo.</p>';
+                    specsModal.show();
+                    return;
+                }
+
+                let specs;
+                try {
+                    specs = JSON.parse(specsData);
+                     // --- IMPORTANT DEBUGGING/WARNING FOR ARRAY DATA ---
+                    if (Array.isArray(specs)) {
+                        console.warn("ADVERTENCIA: Las especificaciones parseadas son un ARRAY. Se esperaba un OBJETO.");
+                        console.warn("Esto es la causa probable de la información desordenada (0:, 1:, etc.) que podría verse.");
+                        console.warn("Asegúrese de que su servidor (Node.js) esté enviando un OBJETO JSON para 'especificaciones'.");
+                        console.warn("Contenido de 'item.especificaciones' que se stringificó:", specsData);
+                    }
+                    // --- END DEBUGGING/WARNING ---
+
+                } catch (parseError) {
+                    console.error("Error al parsear el JSON de especificaciones:", parseError);
+                    console.error("String JSON que causó el error:", specsData);
+                    modalBody.innerHTML = '<p class="text-danger">Error al cargar las especificaciones. Los datos no son válidos.</p>';
+                    specsModal.show();
+                    return;
+                }
+                
+                let content = '<p class="text-muted">No hay especificaciones detalladas disponibles o válidas.</p>';
+
+                // Filter out null, undefined, empty string, or "N/A" values before displaying
+                const validSpecs = Object.entries(specs || {}).filter(([key, value]) => 
+                    value !== null && value !== undefined && value !== '' && String(value).trim().toLowerCase() !== 'n/a'
+                );
+
+                if (validSpecs.length > 0) {
+                    content = '<ul class="list-group list-group-flush">';
+                    for (const [key, value] of validSpecs) {
+                        // Format key: if it's a numeric index (from an array), make it "Item X", otherwise capitalize and replace underscores
+                        const formattedKey = !isNaN(Number(key)) && Number.isInteger(Number(key)) 
+                                            ? `Item ${parseInt(key) + 1}` 
+                                            : key.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                        
+                        content += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>${formattedKey}:</strong>
+                                            <span>${value}</span>
+                                        </li>`;
+                    }
+                    content += '</ul>';
+                }
+
+                modalBody.innerHTML = content;
+                specsModal.show();
+                return; // Stop here, we handled the specs button click
+            }
+
+            if (viewUserInfoBtn) { // If the "View User Info" button was clicked
+                document.getElementById('modal-user-num-inventario').textContent = inventoryRow.dataset.numeroInventario || 'N/A';
+                document.getElementById('modal-user-serial').textContent = inventoryRow.dataset.serial || 'N/A';
+                document.getElementById('modal-user-fabricante').textContent = inventoryRow.dataset.fabricante || 'N/A';
+                document.getElementById('modal-user-modelo').textContent = inventoryRow.dataset.modelo || 'N/A';
+                document.getElementById('modal-estado').textContent = inventoryRow.dataset.estado || 'N/A';
+                document.getElementById('modal-usuario').textContent = inventoryRow.dataset.usuario || 'N/A';
+                document.getElementById('modal-ubicacion').textContent = inventoryRow.dataset.ubicacion || 'N/A';
+                document.getElementById('modal-tecnico').textContent = inventoryRow.dataset.tecnico || 'N/A';
+
+                // Cargar imagen de usuario (si tienes una ruta o lógica para obtenerla)
+                // const userPhotoElement = document.getElementById('modal-foto');
+                // const userPhotoUrl = inventoryRow.dataset.userPhoto; // Asumiendo que añades data-user-photo a la fila
+                // if (userPhotoUrl) {
+                //     userPhotoElement.src = userPhotoUrl;
+                // } else {
+                //     userPhotoElement.src = '/images/user-placeholder.png'; // Fallback
+                // }
+
+                userInfoModal.show();
+                return; // Stop here, we handled the user info button click
+            }
+        });
+
+        // Funcionalidad de exportación a Excel
+        exportButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const tableId = this.dataset.tableId;
+                const filename = this.dataset.filename || 'data.xlsx';
+                const table = document.getElementById(tableId);
+
+                // Clonar la tabla para manipularla sin afectar la visibilidad original
+                const tableClone = table.cloneNode(true);
+
+                // Remover la columna "Acciones" (y cualquier otra con clase 'no-export')
+                tableClone.querySelectorAll('thead th.no-export, tbody td.no-export').forEach(cell => {
+                    cell.remove();
+                });
+
+                // Crear un objeto de libro de trabajo
+                const wb = XLSX.utils.table_to_book(tableClone, { sheet: "Inventario" });
+
+                // Escribir y descargar el archivo
+                XLSX.writeFile(wb, filename);
+            });
+        });
+
+
+        // Función para verificar y activar la primera tabla al cargar la página si no hay una activa
+        function initializeTableDisplay() {
+            // If the dropdown button still shows "Seleccionar Tipo de Activo", click the first item
+            // This ensures that one table is always visible and its filters are populated on load.
+            if (dropdownItems.length > 0 && dropdownButton.textContent.trim() === 'Seleccionar Tipo de Activo') {
+                dropdownItems[0].click();
+            }
+        }
+
+        // Llamar a la función de inicialización después de que el DOM esté cargado
+        initializeTableDisplay();
+    });
+</script>
 
 <%- include('layouts/footer'); %>
