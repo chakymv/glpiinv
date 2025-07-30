@@ -1,3 +1,4 @@
+<!--views/admin/createActa.ejs -->
 <%- include('../layouts/header'); %>
 
     <div class="container mt-5">
@@ -102,6 +103,22 @@
                                         <% }); %>
                                     </select>
                                 </div>
+
+                              
+            <!-- Cedula y Cargo -->
+
+             <div class="col-md-12 mb-3">
+                                        <label for="recibido_por_cargo" class="form-label">Cargo</label>
+                                        <input type="text" class="form-control" id="recibido_por_cargo"
+                                            name="recibido_por_cargo" required>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label for="recibido_por_cedula" class="form-label">Cédula</label>
+                                        <input type="text" class="form-control" id="recibido_por_cedula"
+                                            name="recibido_por_cedula" required>
+                                    </div>
+
+
                                 <div class="row">
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Firma de quien recibe</label>
@@ -185,7 +202,7 @@
                 if (errors.length > 0) {
                     const message = "Por favor, proporcione " + errors.join(' y ') + ".";
                     alert(message);
-                    event.preventDefault(); // Evita el envío del formulario si hay errores
+                    event.preventDefault(); 
                 } else {
                     // Si no hay errores, capturar los datos de la firma y asignarlos a los campos ocultos
                     const recibeData = signaturePadRecibe.toDataURL('image/png');
@@ -196,13 +213,13 @@
                 }
             });
 
-            // Lógica para agregar equipos a la lista
+            
             const tipoEquipoSelect = document.getElementById('tipoEquipo');
             const listaEquiposSelect = document.getElementById('listaEquipos');
             const btnAgregarEquipo = document.getElementById('btnAgregarEquipo');
             const equiposAgregadosList = document.getElementById('equiposAgregados');
 
-            let equiposSeleccionados = {}; // Objeto para evitar duplicados y almacenar el texto completo
+            let equiposSeleccionados = {}; 
 
             tipoEquipoSelect.addEventListener('change', async function() {
                 const tipo = this.value;
@@ -212,29 +229,28 @@
                     btnAgregarEquipo.disabled = true;
 
                     try {
-                        // Asegúrate de que esta URL sea correcta según tus rutas de Express
-                        // La ruta aquí usa :tipo, lo que es consistente con la corrección en routes/admin.js
-                        const response = await fetch(`/api/equipos/${tipo}`); 
+                       
+                        const response = await fetch(`/admin/api/equipos/${tipo}`);
+
                         if (!response.ok) {
                             throw new Error(`HTTP error! status: ${response.status}`);
                         }
                         const equipos = await response.json();
                         
-                        listaEquiposSelect.innerHTML = ''; // Limpiar opciones anteriores
+                        listaEquiposSelect.innerHTML = ''; 
                         if (equipos.length > 0) {
                             equipos.forEach(equipo => {
                                 const option = document.createElement('option');
-                                // El valor combina itemtype|items_id para ser fácilmente parseado en el backend
+                               
                                 option.value = `${tipo}|${equipo.id}`; 
                                 
-                                // Mostrar prioritariamente el numero_inventario.
-                                // Si no existe, usar el serial, y si no, un placeholder.
+                               
                                 const displayIdentifier = equipo.numero_inventario || equipo.serial || 'N/A';
                                 const displayFabricante = equipo.fabricante || 'N/A';
                                 const displayModelo = equipo.modelo || 'N/A';
                                 const displayUbicacion = equipo.ubicacion ? `(${equipo.ubicacion})` : '';
 
-                                // Para el tipo 'Lines', quizás quieras un formato más específico
+                               
                                 if (tipo === 'Lines') {
                                     option.textContent = `Línea: ${displayIdentifier} - Número: ${equipo.serial || 'N/A'} - Grupo: ${displayFabricante}`;
                                 } else {
@@ -265,7 +281,7 @@
                     const equipoValue = selectedOption.value; 
                     const equipoText = selectedOption.textContent;
 
-                    if (!equiposSeleccionados[equipoValue]) { // Evita duplicados
+                    if (!equiposSeleccionados[equipoValue]) { 
                         const li = document.createElement('li');
                         li.className = 'list-group-item d-flex justify-content-between align-items-center';
                         li.innerHTML = `
@@ -275,16 +291,16 @@
                         `;
                         equiposAgregadosList.appendChild(li);
 
-                        equiposSeleccionados[equipoValue] = true; // Marca como agregado
+                        equiposSeleccionados[equipoValue] = true; 
 
-                        // Eliminar el mensaje "No se han agregado equipos." si existe
+                       
                         const noEquiposMessage = equiposAgregadosList.querySelector('.text-muted');
                         if (noEquiposMessage) {
                             noEquiposMessage.remove();
                         }
 
-                        // Agregar listener para el botón de remover
-                   /*     li.querySelector('.remover-equipo').addEventListener('click', function() {
+                        
+                        li.querySelector('.remover-equipo').addEventListener('click', function() {
                             li.remove();
                             delete equiposSeleccionados[this.dataset.value]; // Elimina del registro
                             if (Object.keys(equiposSeleccionados).length === 0) {
@@ -294,8 +310,7 @@
                                 equiposAgregadosList.appendChild(placeholder);
                             }
                         });
-*/
-                  
+
                         selectedOption.remove(); 
                         if (listaEquiposSelect.options.length === 0) {
                             listaEquiposSelect.innerHTML = '<option>No hay más equipos disponibles.</option>';

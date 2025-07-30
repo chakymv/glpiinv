@@ -1,0 +1,158 @@
+<%- include('../layouts/header'); %>
+
+
+
+
+<style>
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #printable-area, #printable-area * {
+            visibility: visible;
+        }
+        #printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .no-print {
+            display: none;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .card-body {
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+
+        .card-body:hover {
+            box-shadow: none !important;
+        }
+
+        .container {
+            max-width: 100% !important;
+        }
+    }
+    .signature-box {
+        border-top: 1px solid #dee2e6;
+        padding-top: 10px;
+        margin-top: 40px;
+        text-align: center;
+    }
+    .signature-img {
+        max-height: 80px;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <h1>Detalle del Acta</h1>
+        <div>
+            <button onclick="window.print()" class="btn btn-primary">Imprimir / Guardar PDF</button>
+            <a href="/admin" class="btn btn-secondary">Volver al Panel</a>
+        </div>
+    </div>
+
+    <div id="printable-area" class="card p-4">
+        <div class="card-body">
+            
+            <div class="text-center mb-5">
+                <h2>ACTA DE ENTREGA DE EQUIPOS DE CÓMPUTO</h2>
+            </div>
+            <div class="d-flex justify-content-between mb-4">
+                <strong>Código de Acta: <%= acta.codigo_acta %></strong>
+                <span>Fecha: <%= new Date(acta.fecha_elaboracion).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+            </div>
+
+            <hr>
+
+          
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>ENTREGA:</h5>
+                    <p class="mb-0"><strong>Nombre:</strong> <%= acta.entregado_por_nombre %></p>
+                    <p class="mb-0"><strong>Cargo:</strong> <%= acta.entregado_por_cargo %></p>
+                    <p class="mb-0"><strong>Cédula:</strong> <%= acta.entregado_por_cedula %></p>
+                </div>
+                <div class="col-md-6">
+                    <h5>RECIBE:</h5>
+                    <p class="mb-0"><strong>Nombre:</strong> <%= acta.usuario_recibe %></p>
+                    <p class="mb-0"><strong>Cargo:</strong> <%= acta.recibido_por_cargo || 'N/A' %></p>
+                    <p class="mb-0"><strong>Cédula:</strong> <%= acta.recibido_por_cedula || 'N/A' %></p>
+                </div>
+            </div>
+
+           
+            <h5 class="mt-5">EQUIPOS Y/O ELEMENTOS ENTREGADOS:</h5>
+            <% if (typeof equiposActa !== 'undefined' && equiposActa.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Inventario</th>
+                                <th>Marca</th>
+                                <th>Modelo</th>
+                                <th>Serial</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% equiposActa.forEach(eq => { %>
+                                <tr>
+                                    <td><%= eq.itemtype || '-' %></td>
+                                    <td><%= eq.numero_inventario || '-' %></td>
+                                    <td><%= eq.marca || '-' %></td>
+                                    <td><%= eq.modelo || '-' %></td>
+                                    <td><%= eq.serial || '-' %></td>
+                                    <td><%= eq.estado || '-' %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <p class="text-muted">No hay equipos asignados a esta acta.</p>
+            <% } %>
+
+            
+            <div class="mt-5">
+                <h5>OBSERVACIONES:</h5>
+                <p><%= acta.observaciones || 'Ninguna.' %></p>
+            </div>
+
+            
+            <div class="row mt-5 pt-5">
+                <div class="col-6 text-center">
+                    <% if (acta.entregado_por_firma) { %>
+                        <img src="<%= acta.entregado_por_firma %>" alt="Firma de quien entrega" class="signature-img">
+                    <% } %>
+                    <div class="signature-box">
+                        <p class="mb-0"><%= acta.entregado_por_nombre %></p>
+                        <p class="mb-0">C.C. <%= acta.entregado_por_cedula %></p>
+                        <p class="mb-0"><strong>ENTREGA A SATISFACCIÓN</strong></p>
+                    </div>
+                </div>
+                <div class="col-6 text-center">
+                    <% if (acta.recibido_por_firma) { %>
+                        <img src="<%= acta.recibido_por_firma %>" alt="Firma de quien recibe" class="signature-img">
+                    <% } %>
+                    <div class="signature-box">
+                        <p class="mb-0"><%= acta.usuario_recibe %></p>
+                        <p class="mb-0">C.C. <%= acta.recibido_por_cedula || 'N/A' %></p>
+                        <p class="mb-0"><strong>RECIBE A SATISFACCIÓN</strong></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<%- include('../layouts/footer'); %>

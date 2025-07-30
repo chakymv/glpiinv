@@ -10,6 +10,15 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
     
+<div style="position: absolute; width: 0; height: 0; overflow: hidden;">
+    <svg>
+        <filter id="lg-dist">
+            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.01" numOctaves="1" seed="0" />
+            <feDisplacementMap in="SourceGraphic" scale="10" />
+        </filter>
+    </svg>
+</div>
+
   <nav class="navbar navbar-expand-lg glass-navbar sticky-top rounded-4 shadow-sm px-3 py-2">
   <div class="container">
     <a class="navbar-brand text-black d-flex align-items-center gap-2" href="/">
@@ -30,6 +39,11 @@
         <li class="nav-item">
           <a class="nav-link d-flex align-items-center gap-1" href="/admin">
            <i class="fa-solid fa-user-tie"></i> Panel 
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link d-flex align-items-center gap-1" href="/admin/config">
+           <i class="fa-solid fa-gears"></i> Configuración
           </a>
         </li>
       </ul>

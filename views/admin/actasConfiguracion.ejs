@@ -1,0 +1,52 @@
+<%- include('../layouts/header'); %>
+
+<div class="container mt-5">
+    <h1 class="titulo-degradado mb-4 text-center">Configuración de Actas</h1>
+
+ 
+
+    <div class="card shadow-lg border-0">
+        <div class="card-body p-4 p-md-5">
+            <form action="/admin/config/update" method="POST" enctype="multipart/form-data">
+                
+                
+                <div class="mb-4">
+                    <label for="titulo_acta" class="form-label fw-bold fs-5">Título del Acta</label>
+                    <input type="text" class="form-control form-control-lg" id="titulo_acta" name="titulo_acta" value="<%= config.titulo_acta || '' %>" required>
+                    <div class="form-text">Este título aparecerá en la parte superior de todas las actas generadas.</div>
+                </div>
+
+               
+                <div class="mb-4">
+                    <label for="responsabilidades_usuario" class="form-label fw-bold fs-5">Cláusula de Responsabilidades del Usuario</label>
+                    <textarea class="form-control" id="responsabilidades_usuario" name="responsabilidades_usuario" rows="8" required><%= config.responsabilidades_usuario || '' %></textarea>
+                    <div class="form-text">Este texto aparecerá en la sección de responsabilidades del acta. Define los deberes del usuario con respecto a los equipos.</div>
+                </div>
+
+               
+                <div class="mb-4">
+                    <label for="logo_empresa" class="form-label fw-bold fs-5">Logo de la Empresa</label>
+                    <div class="d-flex align-items-center">
+                        <% if (config.logo_empresa) { %>
+                            <img src="<%= config.logo_empresa %>" alt="Logo Actual" class="img-thumbnail me-3" style="max-height: 80px; background-color: #f8f9fa;">
+                        <% } else { %>
+                            <div class="me-3 p-3 border rounded bg-light text-muted">Sin logo</div>
+                        <% } %>
+                        <div>
+                            <input class="form-control" type="file" id="logo_empresa" name="logo_empresa" accept="image/png, image/jpeg">
+                            <div class="form-text">Sube un nuevo logo (PNG o JPG). Si no seleccionas un archivo, se mantendrá el logo actual.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">Guardar Configuración</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include('../layouts/footer'); %>

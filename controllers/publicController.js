@@ -28,5 +28,5 @@ const showInventory = async (req, res) => {
 
 
 module.exports = {
-    showInventory
+    showInventory,
 };
